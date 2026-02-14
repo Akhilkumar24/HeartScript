@@ -2,16 +2,6 @@
 
 import { useState } from "react";
 import CardPreview from "./CardPreview";
-import {
-  Download,
-  FileText,
-  Mail,
-  Heart,
-  ArrowLeft,
-  Send,
-  Copy,
-  Check,
-} from "lucide-react";
 
 /* ---------------- LOVE QUOTES ---------------- */
 const loveQuotes: string[] = [
@@ -39,9 +29,7 @@ export default function ValentineCardGenerator() {
     { id: number; x: number; y: number; emoji: string }[]
   >([]);
 
-  const [showCopied, setShowCopied] = useState(false);
-
-  /* ---------------- UTIL ---------------- */
+  /* ---------------- VALIDATION ---------------- */
   const validateStepOne = () => {
     if (!recipient.trim()) {
       setError("Please enter the recipient’s name");
@@ -63,6 +51,7 @@ export default function ValentineCardGenerator() {
     return true;
   };
 
+  /* ---------------- ACTIONS ---------------- */
   const handleReset = () => {
     setRecipient("");
     setMessage("");

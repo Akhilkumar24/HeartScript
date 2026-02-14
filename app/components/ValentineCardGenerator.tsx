@@ -13,6 +13,7 @@ export default function ValentineCardGenerator() {
   const [showCopied, setShowCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [font, setFont] = useState("serif");
+  const [showEmoji, setShowEmoji] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleReset = () => {
@@ -196,6 +197,75 @@ export default function ValentineCardGenerator() {
     }
   };
 
+  const handleDownloadImage = async () => {
+    try {
+      setIsGenerating(true);
+      const html2canvas = (await import("html2canvas")).default;
+
+      const downloadCard = createDownloadCard();
+      document.body.appendChild(downloadCard);
+
+      const canvas = await html2canvas(downloadCard, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      document.body.removeChild(downloadCard);
+
+      const imageData = canvas.toDataURL("image/png");
+      
+      const link = document.createElement("a");
+      link.download = `valentine-card-${recipient || "card"}.png`;
+      link.href = imageData;
+      link.click();
+      
+      alert("Card image downloaded successfully!");
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download image.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGenerating(true);
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      const downloadCard = createDownloadCard();
+      document.body.appendChild(downloadCard);
+
+      const canvas = await html2canvas(downloadCard, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      document.body.removeChild(downloadCard);
+
+      const imageData = canvas.toDataURL("image/png");
+      
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [400, 500]
+      });
+      
+      pdf.addImage(imageData, "PNG", 0, 0, 400, 500);
+      pdf.save(`valentine-card-${recipient || "card"}.pdf`);
+      
+      alert("Card PDF downloaded successfully!");
+    } catch (error) {
+      console.error("PDF download failed:", error);
+      alert("Failed to download PDF.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <main className="flex-grow flex flex-col items-center justify-center px-4 py-8 w-full max-w-6xl mx-auto">
 
@@ -243,10 +313,24 @@ export default function ValentineCardGenerator() {
                 😊
               </button>
 
-              {/* Picker */}
+              {/* Emoji Picker - Simple emoji list */}
               {showEmoji && (
-                <div className="absolute z-50 right-0 mt-2">
-                  <EmojiPicker onEmojiClick={onEmojiClick}/>
+                <div className="absolute z-50 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg p-2 shadow-lg">
+                  <div className="grid grid-cols-6 gap-1">
+                    {['❤️','😍','💕','💖','💗','💓','💞','💘','💝','🥰','😘','💋','🌹','🌷','💐','🌸','✨','🎁','💍','🎀','💌','🏩','👩‍❤️‍👨','👨‍❤️‍👨','👩‍❤️‍👩','💑','🤗','😻'].map((emoji)=>(
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={()=>{
+                          setMessage(prev => prev + emoji);
+                          setShowEmoji(false);
+                        }}
+                        className="text-2xl hover:bg-gray-100 rounded p-1"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 

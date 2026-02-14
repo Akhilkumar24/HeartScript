@@ -20,130 +20,71 @@ export default function ValentineCardGenerator() {
     setMessage("");
     setTheme("romantic");
     setAlignment("center");
-    setFont("serif"); // ✅ reset font
+    setFont("serif");
   };
 
-  const handleClearMessage = () => {
-    setMessage("");
-  };
+  const handleClearMessage = () => setMessage("");
 
-  const handleDownloadImage = async () => {
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-
-      const downloadCard = createDownloadCard();
-      document.body.appendChild(downloadCard);
-
-      const canvas = await html2canvas(downloadCard, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      document.body.removeChild(downloadCard);
-
-      const link = document.createElement("a");
-      link.download = `valentine-card-${recipient || "card"}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Download failed. Please try again.");
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
-
-      const downloadCard = createDownloadCard();
-      document.body.appendChild(downloadCard);
-
-      const canvas = await html2canvas(downloadCard, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      document.body.removeChild(downloadCard);
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 190;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-      pdf.save(`valentine-card-${recipient || "card"}.pdf`);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Download failed. Please try again.");
-    }
+  const onEmojiClick = (emojiData: any) => {
+    setMessage(prev => prev + emojiData.emoji);
   };
 
   const createDownloadCard = () => {
     const themeGradients: Record<string, string> = {
-      romantic:
-        "linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #800020 100%)",
-      dark: "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)",
-      pastel:
-        "linear-gradient(135deg, #fbcfe8 0%, #e9d5ff 50%, #bfdbfe 100%)",
+      romantic: "linear-gradient(135deg,#ec4899,#f43f5e,#800020)",
+      dark: "linear-gradient(135deg,#1f2937,#111827,#000)",
+      pastel: "linear-gradient(135deg,#fbcfe8,#e9d5ff,#bfdbfe)",
     };
 
-    const alignMap: Record<string, string> = {
-      left: "flex-start",
-      center: "center",
-      right: "flex-end",
+    const alignMap: Record<string,string> = {
+      left:"flex-start",
+      center:"center",
+      right:"flex-end"
     };
 
-    const textAlignMap: Record<string, string> = {
-      left: "left",
-      center: "center",
-      right: "right",
+    const textAlignMap: Record<string,string> = {
+      left:"left",
+      center:"center",
+      right:"right"
     };
 
     const card = document.createElement("div");
     card.style.cssText = `
-      position: fixed;
-      left: -9999px;
-      width: 400px;
-      height: 500px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: ${themeGradients[theme]};
+      position:fixed;
+      left:-9999px;
+      width:400px;
+      height:500px;
+      border-radius:16px;
+      overflow:hidden;
+      background:${themeGradients[theme]};
     `;
 
     card.innerHTML = `
       <div style="
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: ${alignMap[alignment]};
-        justify-content: center;
-        text-align: ${textAlignMap[alignment]};
-        color: white;
-        padding: 40px;
-        font-family: 'Playfair Display', serif;
+        position:absolute;
+        inset:0;
+        display:flex;
+        flex-direction:column;
+        align-items:${alignMap[alignment]};
+        justify-content:center;
+        text-align:${textAlignMap[alignment]};
+        color:white;
+        padding:40px;
+        font-family:'Playfair Display', serif;
       ">
-        <div style="font-size: 48px; margin-bottom: 20px;">❤️</div>
+        <div style="font-size:48px;margin-bottom:20px;">❤️</div>
 
-        <h2 style="font-size: 36px; font-weight: bold; margin-bottom: 20px;">
-          Dear <span style="font-style: italic; text-decoration: underline;">${recipient || "Someone Special"}</span>,
+        <h2 style="font-size:36px;font-weight:bold;margin-bottom:20px;">
+          Dear <span style="font-style:italic;text-decoration:underline;">${recipient || "Someone Special"}</span>,
         </h2>
 
-        <p style="font-size: 16px; line-height: 1.6; max-width: 300px; margin-bottom: 30px; font-family:${font};">
+        <p style="font-size:16px;line-height:1.6;max-width:300px;margin-bottom:30px;font-family:${font};">
           ${message || "Your beautiful message will appear here..."}
         </p>
 
-        <div style="font-style: italic; font-size: 20px;">With Love ✨</div>
+        <div style="font-style:italic;font-size:20px;">With Love ✨</div>
       </div>
     `;
-
     return card;
   };
 
@@ -258,20 +199,6 @@ export default function ValentineCardGenerator() {
   return (
     <main className="flex-grow flex flex-col items-center justify-center px-4 py-8 w-full max-w-6xl mx-auto">
 
-      {/* STEP BAR */}
-      <div className="w-full max-w-3xl mb-12">
-        <div className="relative flex justify-between items-center text-sm font-semibold text-gray-500">
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10" />
-          <div
-            className="absolute top-1/2 left-0 h-0.5 bg-[#800020] -z-10 transition-all duration-500"
-            style={{ width: step === 1 ? "0%" : step === 2 ? "50%" : "100%" }}
-          />
-          <Step number={1} label="Personalize" active={step >= 1} />
-          <Step number={2} label="Preview" active={step >= 2} />
-          <Step number={3} label="Send" active={step >= 3} />
-        </div>
-      </div>
-
       {step === 1 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full items-start">
 
@@ -279,7 +206,7 @@ export default function ValentineCardGenerator() {
 
             <div>
               <h1 className="font-display text-5xl font-bold text-gray-900 mb-3">
-                Create Your<br />Valentine Card
+                Create Your<br/>Valentine Card
               </h1>
               <p className="text-gray-600">
                 Craft a message straight from the heart.
@@ -287,18 +214,17 @@ export default function ValentineCardGenerator() {
             </div>
 
             {/* Recipient */}
-            <div>
-              <input
-                autoFocus
-                value={recipient}
-                onChange={(e)=>setRecipient(e.target.value)}
-                placeholder="Recipient Name"
-                className="px-4 py-4 w-full rounded-lg border-2 border-gray-300 focus:border-[#800020] outline-none"
-              />
-            </div>
+            <input
+              autoFocus
+              value={recipient}
+              onChange={(e)=>setRecipient(e.target.value)}
+              placeholder="Recipient Name"
+              className="px-4 py-4 w-full rounded-lg border-2 border-gray-300 focus:border-[#800020] outline-none"
+            />
 
             {/* Message */}
-            <div>
+            <div className="relative">
+
               <textarea
                 value={message}
                 onChange={(e)=>setMessage(e.target.value)}
@@ -307,6 +233,22 @@ export default function ValentineCardGenerator() {
                 rows={5}
                 className="px-4 py-4 w-full rounded-lg border-2 border-gray-300 focus:border-[#800020] outline-none resize-none"
               />
+
+              {/* Emoji Button */}
+              <button
+                type="button"
+                onClick={()=>setShowEmoji(!showEmoji)}
+                className="absolute bottom-3 right-3 text-xl"
+              >
+                😊
+              </button>
+
+              {/* Picker */}
+              {showEmoji && (
+                <div className="absolute z-50 right-0 mt-2">
+                  <EmojiPicker onEmojiClick={onEmojiClick}/>
+                </div>
+              )}
 
               {message && (
                 <button
@@ -333,7 +275,7 @@ export default function ValentineCardGenerator() {
               <option value="pastel">Pastel Dream</option>
             </select>
 
-            {/* Font Selector */}
+            {/* Font */}
             <select
               value={font}
               onChange={(e)=>setFont(e.target.value)}
@@ -388,7 +330,7 @@ export default function ValentineCardGenerator() {
             message={message}
             theme={theme}
             alignment={alignment}
-            font={font}   // ✅ passed
+            font={font}
           />
 
         </div>

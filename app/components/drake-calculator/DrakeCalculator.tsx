@@ -389,7 +389,16 @@ export default function DrakeCalculator() {
           <button
             type="submit"
             disabled={isCalculating}
-            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+className="
+  w-full py-4
+  bg-gradient-to-r from-indigo-600 to-purple-600
+  text-white rounded-xl font-bold text-lg
+  transition-all duration-300
+  hover:scale-[1.02]
+  hover:shadow-[0_0_22px_rgba(99,102,241,0.6)]
+  disabled:opacity-70 disabled:cursor-not-allowed
+  flex items-center justify-center gap-2
+"
           >
             {isCalculating ? (
               <>

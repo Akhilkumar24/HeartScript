@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Code2, PenTool, Share2 } from "lucide-react";
 
+
 const Hero = () => {
   const [typedText, setTypedText] = useState("");
   const fullText = "I love you, Alex ❤️";

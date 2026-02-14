@@ -7,9 +7,33 @@ export default function ValentineCardGenerator() {
   const [recipient, setRecipient] = useState("");
   const [message, setMessage] = useState("");
 
+  const [errors, setErrors] = useState({
+    recipient: "",
+    message: "",
+  });
+
+  const validate = () => {
+    let newErrors = { recipient: "", message: "" };
+    let isValid = true;
+
+    if (!recipient.trim()) {
+      newErrors.recipient = "Recipient name is required";
+      isValid = false;
+    }
+
+    if (!message.trim()) {
+      newErrors.message = "Message is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleReset = () => {
     setRecipient("");
     setMessage("");
+    setErrors({ recipient: "", message: "" });
   };
 
   return (
@@ -23,13 +47,21 @@ export default function ValentineCardGenerator() {
           <label className="block text-sm font-medium">
             Recipient Name
           </label>
+
           <input
             type="text"
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
+            onBlur={validate}
             placeholder="Enter your loved one’s name"
             className="w-full border rounded p-2"
           />
+
+          {errors.recipient && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.recipient}
+            </p>
+          )}
         </div>
 
         {/* Message */}
@@ -45,9 +77,16 @@ export default function ValentineCardGenerator() {
                 setMessage(e.target.value);
               }
             }}
+            onBlur={validate}
             placeholder="Write your heartfelt message here..."
             className="w-full border rounded p-2"
           />
+
+          {errors.message && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.message}
+            </p>
+          )}
 
           {/* Character Counter */}
           <div className="text-sm text-gray-500 mt-1 text-right">
@@ -65,11 +104,13 @@ export default function ValentineCardGenerator() {
         Clear Form
       </button>
 
-      {/* Preview */}
-      <CardPreview
-        recipient={recipient}
-        message={message}
-      />
+      {/* Preview only when valid */}
+      {recipient.trim() && message.trim() && (
+        <CardPreview
+          recipient={recipient}
+          message={message}
+        />
+      )}
 
     </div>
   );

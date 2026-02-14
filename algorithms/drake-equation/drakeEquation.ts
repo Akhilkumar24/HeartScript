@@ -15,7 +15,6 @@
  * Space Complexity: O(1) - Fixed amount of memory used for calculations
  * 
  * @author Your Name
- * @date 2024
  */
 
 import { 

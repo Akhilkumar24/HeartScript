@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import CardPreview from "./CardPreview";
-import { Download, FileText, Mail, MessageCircle, Heart, ArrowLeft, Send, Copy, Check } from "lucide-react";
+import { Download, FileText, Mail, ArrowLeft, Send } from "lucide-react";
 
 export default function ValentineCardGenerator() {
   const [step, setStep] = useState(1);
@@ -10,10 +10,8 @@ export default function ValentineCardGenerator() {
   const [message, setMessage] = useState("");
   const [theme, setTheme] = useState("romantic");
   const [alignment, setAlignment] = useState<"left" | "center" | "right">("center");
-  const [showCopied, setShowCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [font, setFont] = useState("serif");
-  const [showEmoji, setShowEmoji] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleReset = () => {
@@ -24,11 +22,6 @@ export default function ValentineCardGenerator() {
     setFont("serif");
   };
 
-  const handleClearMessage = () => setMessage("");
-
-  const onEmojiClick = (emojiData: any) => {
-    setMessage(prev => prev + emojiData.emoji);
-  };
 
   const createDownloadCard = () => {
     const themeGradients: Record<string, string> = {
@@ -89,6 +82,7 @@ export default function ValentineCardGenerator() {
     return card;
   };
 
+
   const handleEmail = async () => {
     try {
       const html2canvas = (await import("html2canvas")).default;
@@ -103,141 +97,15 @@ export default function ValentineCardGenerator() {
 
       document.body.removeChild(downloadCard);
 
-      const imageData = canvas.toDataURL("image/png");
-
       const subject = encodeURIComponent(`Valentine Card for ${recipient}`);
       const body = encodeURIComponent(
         `Dear ${recipient},\n\n${message}\n\nWith Love ❤️`
       );
 
       window.location.href = `mailto:?subject=${subject}&body=${body}`;
-
-      const link = document.createElement("a");
-      link.download = `valentine-card-${recipient || "card"}.png`;
-      link.href = imageData;
-      link.click();
-
-      alert("Email client opened! The card image has been downloaded.");
     } catch (error) {
       console.error("Email failed:", error);
       alert("Failed to prepare email.");
-    }
-  };
-
-  const handleWhatsApp = async () => {
-    try {
-      setIsGenerating(true);
-      const html2canvas = (await import("html2canvas")).default;
-
-      const downloadCard = createDownloadCard();
-      document.body.appendChild(downloadCard);
-
-      const canvas = await html2canvas(downloadCard, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      document.body.removeChild(downloadCard);
-
-      const imgData = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 190;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-      pdf.save(`valentine-card-${recipient || "card"}.pdf`);
-    } catch (error) {
-      console.error("WhatsApp sharing failed:", error);
-      alert("Failed to prepare card for WhatsApp.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const createDownloadCard = () => {
-    const themeGradients: Record<string, string> = {
-      romantic:
-        "linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #800020 100%)",
-      dark:
-        "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)",
-      pastel:
-        "linear-gradient(135deg, #fbcfe8 0%, #e9d5ff 50%, #bfdbfe 100%)",
-    };
-
-    const alignMap: Record<string, string> = {
-      left: "flex-start",
-      center: "center",
-      right: "flex-end",
-    };
-
-    const textAlignMap: Record<string, string> = {
-      left: "left",
-      center: "center",
-      right: "right",
-    };
-
-    const card = document.createElement("div");
-    card.style.cssText = `
-      position: fixed;
-      left: -9999px;
-      width: 400px;
-      height: 500px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: ${themeGradients[theme]};
-    `;
-
-    card.innerHTML = `
-      <div style="
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: ${alignMap[alignment]};
-        justify-content: center;
-        text-align: ${textAlignMap[alignment]};
-        color: white;
-        padding: 40px;
-        font-family: 'Playfair Display', serif;
-      ">
-        <div style="font-size: 48px; margin-bottom: 20px;">❤️</div>
-
-        <h2 style="font-size: 36px; font-weight: bold; margin-bottom: 20px;">
-          Dear <span style="font-style: italic; text-decoration: underline;">
-          ${recipient || "Someone Special"}
-          </span>,
-        </h2>
-
-      const canvas = await html2canvas(downloadCard, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      document.body.removeChild(downloadCard);
-
-      const imageData = canvas.toDataURL("image/png");
-      
-      // Copy image to clipboard
-      const response = await fetch(imageData);
-      const blob = await response.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ]);
-      
-      setShowCopied(true);
-      setTimeout(() => setShowCopied(false), 2000);
-    } catch (error) {
-      console.error("Copy failed:", error);
-      alert("Failed to copy to clipboard. Please try downloading instead.");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -442,8 +310,7 @@ export default function ValentineCardGenerator() {
               recipient={recipient}
               message={message}
               theme={theme}
-              alignment={alignment}
-            />
+              alignment={alignment} font={""}            />
           </div>
 
           <div className="flex gap-4 justify-center">
@@ -472,108 +339,19 @@ export default function ValentineCardGenerator() {
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <button onClick={handleDownloadImage} className="p-8 border rounded-xl">
+            <button onClick={handleDownloadImage} className="p-8 border rounded-xl hover:bg-gray-50">
               <Download size={40} className="mx-auto mb-2" />
-              Download PNG
+              <p className="font-semibold">Download PNG</p>
             </button>
 
-            <button onClick={handleDownloadPDF} className="p-8 border rounded-xl">
+            <button onClick={handleDownloadPDF} className="p-8 border rounded-xl hover:bg-gray-50">
               <FileText size={40} className="mx-auto mb-2" />
-              Download PDF
+              <p className="font-semibold">Download PDF</p>
             </button>
 
-            <button onClick={handleEmail} className="p-8 border rounded-xl">
+            <button onClick={handleEmail} className="p-8 border rounded-xl hover:bg-gray-50">
               <Mail size={40} className="mx-auto mb-2" />
-              Email
-      {/* STEP 2: PREVIEW */}
-      {step === 2 && (
-        <div className="w-full max-w-4xl">
-          <div className="text-center mb-8">
-            <h2 className="font-display text-3xl font-bold text-gray-900 mb-2">
-              Preview Your Card
-            </h2>
-            <p className="text-gray-600">
-              Here&apos;s how your Valentine card will look
-            </p>
-          </div>
-
-          {/* Full Card Preview */}
-          <div ref={cardRef} className="flex justify-center mb-8">
-            <div className="relative w-full max-w-md aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl shadow-[0_0_60px_rgba(244,63,94,0.35)]">
-              {/* Theme Gradient */}
-              <div className={`absolute inset-0 ${
-                theme === 'romantic' ? 'bg-gradient-to-br from-[#ec4899] via-[#f43f5e] to-[#800020]' :
-                theme === 'dark' ? 'bg-gradient-to-br from-[#1f2937] via-[#111827] to-[#000000]' :
-                'bg-gradient-to-br from-[#fbcfe8] via-[#e9d5ff] to-[#bfdbfe]'
-              }`} />
-              
-              {/* Dots Overlay */}
-              <div className="absolute inset-0 opacity-15" 
-                style={{
-                  backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-                  backgroundSize: '20px 20px'
-                }}
-              />
-
-              {/* Card Content */}
-              <div className={`absolute inset-0 flex flex-col justify-center text-white px-10 py-12 ${
-                alignment === 'left' ? 'text-left items-start' :
-                alignment === 'right' ? 'text-right items-end' :
-                'text-center items-center'
-              }`}>
-                <div className="mb-6 text-4xl animate-bounce">❤️</div>
-                
-                <h2 className="font-serif text-4xl font-bold leading-snug mb-6">
-                  Dear{" "}
-                  <span className="italic underline decoration-rose-200 underline-offset-4">
-                    {recipient}
-                  </span>
-                  ,
-                </h2>
-
-                <p className="text-lg opacity-95 leading-relaxed max-w-sm mb-8">
-                  {message}
-                </p>
-
-                <div className="italic text-xl opacity-95">
-                  With Love ✨
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => setStep(1)}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Edit Card
-            </button>
-
-            <button
-              onClick={handleDownloadImage}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white font-semibold rounded-xl transition"
-            >
-              <Download className="w-5 h-5" />
-              Download Image
-            </button>
-
-            <button
-              onClick={handleDownloadPDF}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white font-semibold rounded-xl transition"
-            >
-              <FileText className="w-5 h-5" />
-              Download PDF
-            </button>
-
-            <button
-              onClick={() => setStep(3)}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-[#800020] hover:bg-[#630019] text-white font-bold rounded-xl shadow-lg transition"
-            >
-              Send Card
-              <Send className="w-5 h-5" />
+              <p className="font-semibold">Email</p>
             </button>
           </div>
         </div>

@@ -47,7 +47,16 @@ export default function Home() {
       icon: Rose,
       color: "from-blue-500 to-red-500",
       path: "/marry",
-    }
+    },
+    {
+      id: "truth-or-dare",
+      title: "Truth or Dare",
+      description: "A Valentine’s twist on Truth or Dare with sweet questions and romantic challenges made to bring you closer. 💘",
+      icon: PenTool,
+      color: "from-red-500 to-pink-500",
+      path: "/truth-or-dare",
+    },
+
   ];
 
   return (

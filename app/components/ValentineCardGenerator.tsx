@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CardPreview from "./CardPreview";
 import { Download, FileText, Mail, Heart, ArrowLeft, Send, Copy, Check } from "lucide-react";
 
@@ -16,260 +16,272 @@ const loveQuotes: string[] = [
 
 export default function ValentineCardGenerator() {
 
-  const [step, setStep] = useState(1);
-  const [recipient, setRecipient] = useState("");
-  const [message, setMessage] = useState("");
-  const [theme, setTheme] = useState("romantic");
-  const [alignment, setAlignment] = useState<"left" | "center" | "right">("center");
-  const [font, setFont] = useState("serif");
+/* ---------------- STATES ---------------- */
 
-  const [stickers, setStickers] = useState<{ id:number;x:number;y:number;emoji:string }[]>([]);
-  const [showEmoji, setShowEmoji] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showCopied, setShowCopied] = useState(false);
-  const [showSocialCopied, setShowSocialCopied] = useState(false);
+const [step,setStep]=useState(1);
+const [recipient,setRecipient]=useState("");
+const [message,setMessage]=useState("");
+const [theme,setTheme]=useState("romantic");
+const [alignment,setAlignment]=useState<"left"|"center"|"right">("center");
+const [font,setFont]=useState("serif");
 
-  /* AUDIO STATE */
+const [stickers,setStickers]=useState<{id:number;x:number;y:number;emoji:string}[]>([]);
+const [isGenerating,setIsGenerating]=useState(false);
 
-const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-const [audioURL, setAudioURL] = useState<string | null>(null);
-const [isRecording, setIsRecording] = useState(false);
-const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+const [showCopied,setShowCopied]=useState(false);
+const [showSocialCopied,setShowSocialCopied]=useState(false);
+const [showSaved,setShowSaved]=useState(false);
+const [showEmoji,setShowEmoji]=useState(false);
 
-  const stickerOptions = ["❤️","🌹","⭐","💖","💘","✨","🎀","💐"];
+/* AUDIO */
+const [audioBlob,setAudioBlob]=useState<Blob|null>(null);
+const [audioURL,setAudioURL]=useState<string|null>(null);
+const [isRecording,setIsRecording]=useState(false);
+const [mediaRecorder,setMediaRecorder]=useState<MediaRecorder|null>(null);
+
+const stickerOptions=["❤️","🌹","⭐","💖","💘","✨","🎀","💐"];
+
+/* ---------------- LOAD DRAFT ---------------- */
+
+useEffect(()=>{
+const saved=localStorage.getItem("cardDraft");
+if(!saved)return;
+const d=JSON.parse(saved);
+
+setRecipient(d.recipient??"");
+setMessage(d.message??"");
+setTheme(d.theme??"romantic");
+setAlignment(d.alignment??"center");
+setFont(d.font??"serif");
+setStickers(d.stickers??[]);
+setAudioURL(d.audioURL??null);
+},[]);
+
+/* ---------------- AUTO SAVE ---------------- */
+
+useEffect(()=>{
+const draft={recipient,message,theme,alignment,font,stickers,audioURL};
+localStorage.setItem("cardDraft",JSON.stringify(draft));
+},[recipient,message,theme,alignment,font,stickers,audioURL]);
+
+/* ---------------- MANUAL SAVE ---------------- */
+
+const handleManualSave=()=>{
+const draft={recipient,message,theme,alignment,font,stickers,audioURL};
+localStorage.setItem("cardDraft",JSON.stringify(draft));
+setShowSaved(true);
+setTimeout(()=>setShowSaved(false),2000);
+};
+
+/* ---------------- RESET ---------------- */
+
+const handleReset=()=>{
+setRecipient("");
+setMessage("");
+setTheme("romantic");
+setAlignment("center");
+setFont("serif");
+setStickers([]);
+setAudioURL(null);
+localStorage.removeItem("cardDraft");
+};
 
 /* ---------------- STICKERS ---------------- */
 
-const addSticker = (emoji:string)=>{
-  setStickers(prev=>[...prev,{id:Date.now(),x:120,y:120,emoji}]);
+const addSticker=(emoji:string)=>{
+setStickers(p=>[...p,{id:Date.now(),x:120,y:120,emoji}]);
 };
 
-const moveSticker = (id:number,x:number,y:number)=>{
-  setStickers(prev=>prev.map(s=>s.id===id?{...s,x,y}:s));
+const moveSticker=(id:number,x:number,y:number)=>{
+setStickers(p=>p.map(s=>s.id===id?{...s,x,y}:s));
 };
 
-/* ---------------- UTIL ---------------- */
+/* ---------------- RANDOM QUOTE ---------------- */
 
-const handleReset = ()=>{
-  setRecipient("");
-  setMessage("");
-  setTheme("romantic");
-  setAlignment("center");
-  setFont("serif");
-  setStickers([]);
-};
-
-const generateRandomQuote = ()=>{
-  const randomIndex = Math.floor(Math.random()*loveQuotes.length);
-  setMessage(loveQuotes[randomIndex]);
+const generateRandomQuote=()=>{
+const i=Math.floor(Math.random()*loveQuotes.length);
+setMessage(loveQuotes[i]);
 };
 
 /* ---------------- AUDIO ---------------- */
 
-const startRecording = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    const recorder = new MediaRecorder(stream);
-    const chunks:BlobPart[] = [];
+const startRecording=async()=>{
+try{
+const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+const recorder=new MediaRecorder(stream);
+const chunks:BlobPart[]=[];
 
-    recorder.ondataavailable = e => chunks.push(e.data);
-
-    recorder.onstop = ()=>{
-      const blob = new Blob(chunks,{type:"audio/webm"});
-      setAudioBlob(blob);
-      setAudioURL(URL.createObjectURL(blob));
-    };
-
-    recorder.start();
-    setMediaRecorder(recorder);
-    setIsRecording(true);
-
-  } catch {
-    alert("Microphone permission denied");
-  }
+recorder.ondataavailable=e=>chunks.push(e.data);
+recorder.onstop=()=>{
+const blob=new Blob(chunks,{type:"audio/webm"});
+setAudioBlob(blob);
+setAudioURL(URL.createObjectURL(blob));
 };
 
-const stopRecording = ()=>{
-  if(mediaRecorder){
-    mediaRecorder.stop();
-    setIsRecording(false);
-  }
+recorder.start();
+setMediaRecorder(recorder);
+setIsRecording(true);
+
+}catch{
+alert("Mic permission denied");
+}
 };
 
-const handleAudioUpload=(e: React.ChangeEvent<HTMLInputElement>)=>{
-  const file=e.target.files?.[0];
-  if(file){
-    setAudioBlob(file);
-    setAudioURL(URL.createObjectURL(file));
-  }
+const stopRecording=()=>{
+mediaRecorder?.stop();
+setIsRecording(false);
+};
+
+const handleAudioUpload=(e:React.ChangeEvent<HTMLInputElement>)=>{
+const file=e.target.files?.[0];
+if(file){
+setAudioBlob(file);
+setAudioURL(URL.createObjectURL(file));
+}
 };
 
 /* ---------------- SHARE LINK ---------------- */
 
-const generateShareLink = ()=>{
-  const params=new URLSearchParams({
-    to:recipient,
-    msg:message,
-    theme,
-    align:alignment,
-    font
-  });
-
-  return `${window.location.origin}/card/view?${params.toString()}`;
+const generateShareLink=()=>{
+const params=new URLSearchParams({
+to:recipient,
+msg:message,
+theme,
+align:alignment,
+font
+});
+return `${window.location.origin}/card/view?${params}`;
 };
 
-const handleCopyLink = async()=>{
-  try{
-    const link=generateShareLink();
-    await navigator.clipboard.writeText(link);
-    setShowCopied(true);
-    setTimeout(()=>setShowCopied(false),2000);
-  }catch{
-    alert("Failed to copy link");
-  }
+const handleCopyLink=async()=>{
+const link=generateShareLink();
+await navigator.clipboard.writeText(link);
+setShowCopied(true);
+setTimeout(()=>setShowCopied(false),2000);
 };
 
-  /* ---------------- SOCIAL MEDIA SHARE ---------------- */
+/* ---------------- SOCIAL SHARE ---------------- */
 
-const getEncodedMessage = () => {
-  const fullMessage = `Dear ${recipient || "Someone Special"},\n\n${message}\n\nWith Love ❤️`;
-  return encodeURIComponent(fullMessage);
+const getEncodedMessage=()=>{
+const txt=`Dear ${recipient||"Someone Special"}\n\n${message}\n\nWith Love ❤️`;
+return encodeURIComponent(txt);
 };
 
-const handleWhatsAppShare = () => {
-  if (!message.trim()) return;
-  const url = `https://wa.me/?text=${getEncodedMessage()}`;
-  window.open(url, "_blank");
+const handleWhatsAppShare=()=>{
+if(!message.trim())return;
+window.open(`https://wa.me/?text=${getEncodedMessage()}`,"_blank");
 };
 
-const handleTwitterShare = () => {
-  if (!message.trim()) return;
-  const url = `https://twitter.com/intent/tweet?text=${getEncodedMessage()}`;
-  window.open(url, "_blank");
+const handleTwitterShare=()=>{
+if(!message.trim())return;
+window.open(`https://twitter.com/intent/tweet?text=${getEncodedMessage()}`,"_blank");
 };
 
-const handleInstagramCopy = async () => {
-  if (!message.trim()) return;
-
-  try {
-    const fullMessage = `Dear ${recipient || "Someone Special"},\n\n${message}\n\nWith Love ❤️`;
-    await navigator.clipboard.writeText(fullMessage);
-
-    setShowSocialCopied(true);
-    setTimeout(() => setShowSocialCopied(false), 2000);
-  } catch {
-    alert("Failed to copy message");
-  }
+const handleInstagramCopy=async()=>{
+if(!message.trim())return;
+const txt=`Dear ${recipient||"Someone Special"}\n\n${message}\n\nWith Love ❤️`;
+await navigator.clipboard.writeText(txt);
+setShowSocialCopied(true);
+setTimeout(()=>setShowSocialCopied(false),2000);
 };
 
-/* Optional: Mobile Web Share API */
-const handleNativeShare = async () => {
-  if (!message.trim()) return;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: "Valentine Card 💖",
-        text: `Dear ${recipient || "Someone Special"},\n\n${message}`,
-      });
-    } catch {}
-  }
+const handleNativeShare=async()=>{
+if(!navigator.share)return;
+await navigator.share({
+title:"Valentine Card 💖",
+text:`Dear ${recipient}\n\n${message}`
+});
 };
 
+/* ---------------- CANVAS ---------------- */
 
-/* ---------------- CARD IMAGE DOM ---------------- */
-/* ---------------- DOWNLOAD CARD DOM ---------------- */
-
-const createDownloadCard = ()=>{
-  const gradients:any={
-    romantic:"linear-gradient(135deg,#ec4899,#f43f5e,#800020)",
-    dark:"linear-gradient(135deg,#1f2937,#111827,#000)",
-    pastel:"linear-gradient(135deg,#fbcfe8,#e9d5ff,#bfdbfe)"
-  };
-
-  const alignMap:any={left:"flex-start",center:"center",right:"flex-end"};
-  const textAlignMap:any={left:"left",center:"center",right:"right"};
-
-  const card=document.createElement("div");
-
-  card.style.cssText=`
-  position:fixed;
-  left:-9999px;
-  width:400px;
-  height:500px;
-  border-radius:16px;
-  overflow:hidden;
-  background:${gradients[theme]};
-  `;
-
-  card.innerHTML=`
-  <div style="
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  align-items:${alignMap[alignment]};
-  justify-content:center;
-  text-align:${textAlignMap[alignment]};
-  color:white;
-  padding:40px;
-  font-family:${font};
-  ">
-  <div style="font-size:48px;margin-bottom:20px;">❤️</div>
-
-  <h2 style="font-size:36px;font-weight:bold;margin-bottom:20px;">
-  Dear <span style="font-style:italic;text-decoration:underline;">${recipient||"Someone Special"}</span>,
-  </h2>
-
-  <p style="font-size:16px;line-height:1.6;max-width:300px;margin-bottom:30px;">
-  ${message||"Your beautiful message will appear here..."}
-  </p>
-
-  <div style="font-style:italic;font-size:20px;">With Love ✨</div>
-  </div>
-  `;
-  return card;
+const createDownloadCard=()=>{
+const gradients:any={
+romantic:"linear-gradient(135deg,#ec4899,#f43f5e,#800020)",
+dark:"linear-gradient(135deg,#1f2937,#111827,#000)",
+pastel:"linear-gradient(135deg,#fbcfe8,#e9d5ff,#bfdbfe)"
 };
 
-/* ---------------- RENDER CANVAS ---------------- */
+const alignMap:any={left:"flex-start",center:"center",right:"flex-end"};
+const textAlign:any={left:"left",center:"center",right:"right"};
 
-const renderCanvas = async()=>{
-  const html2canvas=(await import("html2canvas")).default;
-  const node=createDownloadCard();
-  document.body.appendChild(node);
-  const canvas=await html2canvas(node,{scale:2,backgroundColor:"#fff"});
-  document.body.removeChild(node);
-  return canvas;
+const card=document.createElement("div");
+card.style.cssText=`
+position:fixed;
+left:-9999px;
+width:400px;
+height:500px;
+border-radius:16px;
+overflow:hidden;
+background:${gradients[theme]};
+`;
+
+card.innerHTML=`
+<div style="
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:${alignMap[alignment]};
+justify-content:center;
+text-align:${textAlign[alignment]};
+color:white;
+padding:40px;
+font-family:${font};
+">
+
+<h2 style="font-size:36px;font-weight:bold;margin-bottom:20px;">
+Dear <span style="font-style:italic;text-decoration:underline;">${recipient||"Someone Special"}</span>,
+</h2>
+
+<p style="font-size:16px;margin-bottom:30px;">
+${message||"Your message..."}
+</p>
+
+<div style="font-size:20px;">With Love ❤️</div>
+
+</div>
+`;
+return card;
+};
+
+const renderCanvas=async()=>{
+const html2canvas=(await import("html2canvas")).default;
+const node=createDownloadCard();
+document.body.appendChild(node);
+const canvas=await html2canvas(node,{scale:2,backgroundColor:"#fff"});
+document.body.removeChild(node);
+return canvas;
 };
 
 /* ---------------- DOWNLOAD ---------------- */
 
-const handleDownloadImage = async (type:"png"|"jpeg")=>{
-  setIsGenerating(true);
-  const canvas=await renderCanvas();
-  const link=document.createElement("a");
-  link.download=`valentine-card.${type}`;
-  link.href=canvas.toDataURL(`image/${type}`,1.0);
-  link.click();
-  setIsGenerating(false);
+const handleDownloadImage=async(type:"png"|"jpeg")=>{
+setIsGenerating(true);
+const canvas=await renderCanvas();
+const link=document.createElement("a");
+link.download=`valentine.${type}`;
+link.href=canvas.toDataURL(`image/${type}`,1);
+link.click();
+setIsGenerating(false);
 };
 
 const handleDownloadPDF=async()=>{
-  setIsGenerating(true);
-  const canvas=await renderCanvas();
-  const {jsPDF}=await import("jspdf");
-  const pdf=new jsPDF({orientation:"portrait",unit:"px",format:[400,500]});
-  pdf.addImage(canvas.toDataURL("image/png"),"PNG",0,0,400,500);
-  pdf.save("valentine-card.pdf");
-  setIsGenerating(false);
+setIsGenerating(true);
+const canvas=await renderCanvas();
+const {jsPDF}=await import("jspdf");
+const pdf=new jsPDF({orientation:"portrait",unit:"px",format:[400,500]});
+pdf.addImage(canvas.toDataURL("image/png"),"PNG",0,0,400,500);
+pdf.save("valentine-card.pdf");
+setIsGenerating(false);
 };
 
 /* ---------------- EMAIL ---------------- */
 
 const handleEmail=()=>{
-  const subject=encodeURIComponent("Valentine Card for "+recipient);
-  const body=encodeURIComponent(`Dear ${recipient}\n\n${message}\n\nWith Love ❤️`);
-  window.location.href=`mailto:?subject=${subject}&body=${body}`;
+const subject=encodeURIComponent("Valentine Card for "+recipient);
+const body=encodeURIComponent(`Dear ${recipient}\n\n${message}\n\nWith Love ❤️`);
+window.location.href=`mailto:?subject=${subject}&body=${body}`;
 };
 
 /* ---------------- UI ---------------- */
@@ -280,9 +292,8 @@ return(
 {/* STEP BAR */}
 <div className="w-full max-w-2xl mb-12">
 <div className="relative flex justify-between items-center">
-<div className="absolute top-5 left-0 w-full h-1 bg-gray-200 rounded-full"/>
-<div className="absolute top-5 left-0 h-1 bg-[#800020] rounded-full transition-all"
-style={{width:step===1?"0%":step===2?"50%":"100%"}}/>
+<div className="absolute top-5 left-0 w-full h-1 bg-gray-200"/>
+<div className="absolute top-5 left-0 h-1 bg-[#800020]" style={{width:step===1?"0%":step===2?"50%":"100%"}}/>
 <Step number={1} label="Personalize" active={step>=1}/>
 <Step number={2} label="Preview" active={step>=2}/>
 <Step number={3} label="Send" active={step>=3}/>
@@ -295,77 +306,63 @@ style={{width:step===1?"0%":step===2?"50%":"100%"}}/>
 
 <div className="flex flex-col gap-6">
 
-<button onClick={generateRandomQuote}
-className="px-4 py-2 bg-[#800020] text-white rounded-lg">
-💌 Generate Random Love Quote
+<button onClick={generateRandomQuote} className="px-4 py-2 bg-[#800020] text-white rounded">
+Generate Quote
 </button>
 
-<input value={recipient} onChange={e=>setRecipient(e.target.value)}
-placeholder="Recipient Name"
+<input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder="Recipient"
 className="px-4 py-4 border rounded"/>
 
 <textarea value={message} onChange={e=>setMessage(e.target.value)}
-rows={5}
-placeholder="Your Message"
-className="px-4 py-4 border-2 rounded-lg resize-none"/>
+rows={5} placeholder="Message"
+className="px-4 py-4 border rounded"/>
 
-{/* AUDIO UI */}
-<div className="flex flex-col gap-3 border rounded-xl p-4">
-<label className="font-semibold text-gray-700">🎤 Voice Message</label>
-
-<div className="flex gap-3 flex-wrap">
-<button onClick={startRecording} disabled={isRecording}
-className="px-4 py-2 bg-red-500 text-white rounded disabled:opacity-50">
-🎙 Record
-</button>
-
-<button onClick={stopRecording} disabled={!isRecording}
-className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50">
-⏹ Stop
-</button>
-
+{/* AUDIO */}
+<div className="border p-4 rounded-xl">
+<div className="flex gap-3">
+<button onClick={startRecording} disabled={isRecording} className="px-4 py-2 bg-red-500 text-white rounded">Record</button>
+<button onClick={stopRecording} disabled={!isRecording} className="px-4 py-2 bg-gray-700 text-white rounded">Stop</button>
 <label className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer">
-📁 Upload
+Upload
 <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden"/>
 </label>
 </div>
-
-{audioURL && <audio controls className="w-full mt-2"><source src={audioURL}/></audio>}
+{audioURL&&<audio controls src={audioURL} className="mt-2 w-full"/>}
 </div>
 
 {/* EMOJI */}
 <div className="relative">
 <button onClick={()=>setShowEmoji(!showEmoji)} className="text-2xl">😊</button>
 {showEmoji&&(
-<div className="absolute z-50 bg-white border rounded-xl p-3 shadow">
-<div className="grid grid-cols-6 gap-1">
-{["❤️","😍","💕","💖","🌹","✨","💌"].map(e=>(
-<button key={e} onClick={()=>{setMessage(p=>p+e);setShowEmoji(false);}}>
-{e}
-</button>
+<div className="absolute bg-white border rounded p-2 grid grid-cols-6">
+{["❤️","😍","💕","💖","🌹","✨"].map(e=>(
+<button key={e} onClick={()=>{setMessage(p=>p+e);setShowEmoji(false);}}>{e}</button>
 ))}
-</div>
 </div>
 )}
 </div>
 
-<select value={theme} onChange={e=>setTheme(e.target.value)} className="px-4 py-3 border rounded">
+<select value={theme} onChange={e=>setTheme(e.target.value)} className="border p-3">
 <option value="romantic">Romantic</option>
 <option value="dark">Dark</option>
 <option value="pastel">Pastel</option>
 </select>
 
-<select value={font} onChange={e=>setFont(e.target.value)} className="px-4 py-3 border rounded">
+<select value={font} onChange={e=>setFont(e.target.value)} className="border p-3">
 <option value="serif">Serif</option>
 <option value="'Great Vibes',cursive">Script</option>
 <option value="'Pacifico',cursive">Fun</option>
 </select>
 
 <div className="flex gap-4">
+<button onClick={handleManualSave} className="flex-1 border py-3 rounded">
+{showSaved?<Check/>:"Save Draft"}
+</button>
+
 <button onClick={handleReset} className="flex-1 border py-3 rounded">Reset</button>
-<button disabled={!recipient||!message}
-onClick={()=>setStep(2)}
-className="flex-1 bg-[#800020] text-white py-3 rounded disabled:opacity-50">
+
+<button disabled={!recipient||!message} onClick={()=>setStep(2)}
+className="flex-1 bg-[#800020] text-white py-3 rounded">
 Continue →
 </button>
 </div>
@@ -406,60 +403,29 @@ Send <Send/>
 <Heart className="mx-auto w-12 h-12 text-[#800020] mb-4 animate-pulse"/>
 
 <h2 className="text-3xl font-bold mb-2">Send Your Card</h2>
-<p className="mb-8 text-gray-600">Choose how to share it</p>
 
 <div className="grid grid-cols-2 gap-4">
 
-  <button onClick={handleDownloadPDF} className="border p-6 rounded"><FileText/> PDF</button>
+<button onClick={handleDownloadPDF} className="border p-6 rounded"><FileText/> PDF</button>
+<button onClick={()=>handleDownloadImage("png")} className="border p-6 rounded"><Download/> PNG</button>
+<button onClick={()=>handleDownloadImage("jpeg")} className="border p-6 rounded"><Download/> JPG</button>
 
+<button onClick={handleWhatsAppShare} className="border p-6 rounded">WhatsApp</button>
+<button onClick={handleTwitterShare} className="border p-6 rounded">Twitter</button>
 
-
-  <button
-  onClick={handleWhatsAppShare}
-  disabled={!message.trim()}
-  className="border p-6 rounded hover:bg-green-50 disabled:opacity-50 transition"
->
-  💬 WhatsApp
+<button onClick={handleInstagramCopy} className="border p-6 rounded">
+{showSocialCopied?"Copied!":"Instagram"}
 </button>
 
-<button
-  onClick={handleTwitterShare}
-  disabled={!message.trim()}
-  className="border p-6 rounded hover:bg-gray-100 disabled:opacity-50 transition"
->
-  🐦 Twitter (X)
-</button>
-
-<button
-  onClick={handleInstagramCopy}
-  disabled={!message.trim()}
-  className="border p-6 rounded hover:bg-pink-50 disabled:opacity-50 transition"
->
-  {showSocialCopied ? "✅ Copied!" : "📸 Instagram Caption"}
-</button>
-
-{typeof navigator !== "undefined" && navigator.share && (
-  <button
-    onClick={handleNativeShare}
-    className="border p-6 rounded hover:bg-red-50 transition"
-  >
-    📱 Share (Mobile)
-  </button>
+{navigator.share&&(
+<button onClick={handleNativeShare} className="border p-6 rounded">Share</button>
 )}
-
 
 <button onClick={handleEmail} className="border p-6 rounded"><Mail/> Email</button>
 
 <button onClick={handleCopyLink} className="border p-6 rounded">
 {showCopied?<Check/>:<Copy/>}
-{showCopied?"Copied!":"Copy Link"}
 </button>
-
-<button onClick={()=>handleDownloadImage("png")} className="border p-6 rounded"><Download/> PNG</button>
-
-<button onClick={()=>handleDownloadImage("jpeg")} className="border p-6 rounded"><Download/> JPG</button>
-
-<button onClick={handleDownloadPDF} className="border p-6 rounded"><FileText/> PDF</button>
 
 </div>
 

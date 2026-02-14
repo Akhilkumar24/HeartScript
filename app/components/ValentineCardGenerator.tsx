@@ -512,7 +512,7 @@ className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50">
   onClick={handleWhatsAppShare}
   disabled={!message.trim()}
   title={!message.trim() ? "Add a message to enable WhatsApp sharing" : ""}
-  className="border p-6 rounded hover:bg-green-50 disabled:opacity-50 transition"
+className="border p-6 rounded disabled:opacity-50 disabled:cursor-not-allowed"
 >
   💬 WhatsApp
 </button>
@@ -529,13 +529,13 @@ className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50">
 
 
 <button
-  onClick={handleInstagramCopy}
   disabled={!message.trim()}
-  title={!message.trim() ? "Add a message to copy an Instagram caption" : ""}
-  className="border p-6 rounded hover:bg-pink-50 disabled:opacity-50 transition"
+  title={!message.trim() ? "Write a message to share on Twitter" : ""}
+  className="border p-6 rounded disabled:opacity-50 disabled:cursor-not-allowed"
 >
-  {showSocialCopied ? "✅ Copied!" : "📸 Instagram Caption"}
+  🐦 Twitter (X)
 </button>
+
 
 
 {typeof navigator !== "undefined" && navigator.share && (

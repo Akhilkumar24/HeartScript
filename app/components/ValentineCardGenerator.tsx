@@ -43,6 +43,8 @@ export default function ValentineCardGenerator() {
   const [font, setFont] = useState("serif");
   const [error, setError] = useState<string | null>(null);
   const [showCopied, setShowCopied] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+
   const [stickers, setStickers] = useState<Sticker[]>([
     { id: 1, x: 20, y: 20, emoji: "💖" },
     { id: 2, x: 200, y: 80, emoji: "💕" },
@@ -102,6 +104,7 @@ export default function ValentineCardGenerator() {
   /* ---------------- UI ---------------- */
   return (
     <main className="flex flex-col items-center px-4 py-8 w-full max-w-6xl mx-auto min-h-screen">
+
       {/* STEP 1 */}
       {step === 1 && (
         <div className="grid lg:grid-cols-2 gap-12 w-full">
@@ -154,6 +157,34 @@ export default function ValentineCardGenerator() {
               >
                 {message.length} / {MESSAGE_LIMIT} characters
               </p>
+            </div>
+
+            {/* Emoji picker */}
+            <div className="relative">
+              <button
+                title="Add emoji"
+                onClick={() => setShowEmoji(!showEmoji)}
+                className="text-2xl"
+              >
+                😊
+              </button>
+
+              {showEmoji && (
+                <div className="absolute z-10 bg-white border rounded-lg p-2 shadow grid grid-cols-6 gap-2">
+                  {["❤️", "😍", "💕", "💖", "🌹", "✨", "💌"].map((e) => (
+                    <button
+                      key={e}
+                      title={`Insert ${e} emoji`}
+                      onClick={() => {
+                        setMessage((p) => p + e);
+                        setShowEmoji(false);
+                      }}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
@@ -226,7 +257,7 @@ export default function ValentineCardGenerator() {
             <button
               disabled={!message.trim()}
               title={!message.trim() ? "Add a message to enable WhatsApp sharing" : ""}
-              className="border p-6 rounded disabled:opacity-50"
+              className="border p-6 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               💬 WhatsApp
             </button>
@@ -234,7 +265,7 @@ export default function ValentineCardGenerator() {
             <button
               disabled={!message.trim()}
               title={!message.trim() ? "Write a message to share on Twitter" : ""}
-              className="border p-6 rounded disabled:opacity-50"
+              className="border p-6 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               🐦 Twitter (X)
             </button>
@@ -263,10 +294,7 @@ export default function ValentineCardGenerator() {
             </button>
           </div>
 
-          <button
-            onClick={() => setStep(2)}
-            className="mt-8 underline"
-          >
+          <button onClick={() => setStep(2)} className="mt-8 underline">
             ← Back
           </button>
         </div>
